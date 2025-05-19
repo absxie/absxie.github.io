@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fufuxiexielf</title>
+    <style>
+        body {
+            background: url('static/四月.png') no-repeat center center/cover;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            min-height: 100vh; /* 确保 body 占据整个视口高度 */
+            font-family: 'Arial', sans-serif
+        }
+
+        .book-container {
+            width: 500px;
+            height: 750px;
+            position: relative;
+            margin: 0 auto; /* 水平居中 */
+        }
+
+        .book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .cover, .page, .back-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transition: transform 1s;
+            box-sizing: border-box;
+            padding: 20px;
+            background: white;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        .cover .front, .cover .back,
+        .page .front, .page .back,
+        .back-cover .front, .back-cover .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            box-sizing: border-box;
+            padding: 30px;
+            background: white;
+            overflow: hidden;
+        }
+
+
+        .cover .back,
+        .page .back,
+        .back-cover .back {
+            transform: rotateY(180deg);
+        }
+
+       .cover {
+            background: #f5f5f5;
+            position: absolute;
+            width: 100%; /* 增加宽度 */
+            height: 100%;
+            z-index: 99;
+        }
+
+        .cover .front {
+            background: url('static/fengmian.png') no-repeat center center/cover;
+            display: flex; /* 允许在封面上添加其他内容 */
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+            text-align: center; /* 文本居中 */
+            color: white; /* 设置文字颜色为白色 */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* 添加文字阴影效果 */
+        }
+
+
+        .page {
+            background: #f9f9f9;
+        }
+
+        .page h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .back-cover {
+            background: #eee;
+        }
+
+        .back-cover .back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: #777;
+            flex-direction: column;
+        }
+
+        /* 翻页按钮样式 */
+        .page-turner {
+            position: absolute;
+            bottom: 20px;
+            width: 40px;
+            height: 60px;
+            background: rgba(52, 152, 219, 0.7);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .page-turner::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .prev-page {
+            left: 10px;
+            padding-left: 5px;
+        }
+
+        .prev-page::before {
+            border-width: 10px 15px 10px 0;
+            border-color: transparent white transparent transparent;
+            left: 5px;
+        }
+
+        .next-page {
+            right: 10px;
+            padding-right: 5px;
+        }
+
+        .next-page::before {
+            border-width: 10px 0 10px 15px;
+            border-color: transparent transparent transparent white;
+            right: 5px;
+        }
+
+        /* 鼠标悬停效果 */
+        .page-turner:hover {
+            width: 80px;
+            background: rgba(41, 128, 185, 0.9);
+        }
+
+        .prev-page:hover::after {
+            content: '上一页';
+            margin-left: 15px;
+            font-size: 14px;
+        }
+
+        .next-page:hover::after {
+            content: '下一页';
+            margin-right: 15px;
+            font-size: 14px;
+        }
+
+        /* 翻页阴影效果 */
+        .page.flipping {
+            box-shadow: -5px 5px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        /* 书本厚度效果 */
+        .book {
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            background: #8B4513;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 500px) {
+            .book-container {
+                width: 300px;
+                height: 400px;
+            }
+
+            .cover .front h1 {
+                font-size: 2em;
+            }
+
+            .page h2 {
+                font-size: 1.3em;
+            }
+
+            .page-turner {
+                width: 30px;
+                height: 50px;
+            }
+
+            .page-turner:hover {
+                width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="book-container">
+        <div class="book">
+            <!-- 翻页按钮 -->
+            <div class="page-turner prev-page" id="prev-btn"></div>
+            <div class="page-turner next-page" id="next-btn"></div>
+            <div class="cover" data-page="cover">
+                <div class="front"></div>
+                <div class="back"></div>
+            </div>
+            <div class="page" data-page="1">
+                <div class="front">
+                    <h2>符佳，你好!</h2>
+                    <p>5月20日是一个对我来说很重要的日子</p>
+                    <p>可以答应我把下面的内容看完吗</p>
+                </div>
+            </div>
+            <div class="page" data-page="2">
+                <div class="front">
+                    <h2></h2>
+                    <p>我原本以为我不爱你</p>
+                    <p>可是我错了</p>
+                    <p>直到你离开后</p>
+                    <p>我才发现我的世界只剩一片漆黑</p>
+                    <p>这两年多我不知道在这片无垠的黑暗中挣扎了多久</p>
+                    <p>我的世界逐渐扭曲，折叠</p>
+                    <p>或许一切早已崩坏</p>
+                    <p>我已找不出任何可以对你说的话</p>
+                    <p>只剩下回忆在蔓延</p>
+                </div>
+            </div>
+            <div class="page" data-page="3">
+                <div class="front">
+                    <h2>未来何从何去</h2>
+                    <p>我们曾在摩天轮上牵手</p>
+                    <img src="static/摩天轮.jpg" alt="描述图片" style="width:100%;max-width:500px">
+                </div>
+            </div>
+            <div class="page" data-page="4">
+                <div class="front">
+                    <h2>你快乐我也就没关系</h2>
+                    <p>乖fufu</p>
+                    <img src="static/fufu.jpg" alt="描述图片" style="width:100%;max-width:450px">
+                </div>
+            </div>
+            <div class="page" data-page="5">
+                <div class="front">
+                    <h2>对你我最熟悉</h2>
+                    <p>出去吃完火锅回来</p>
+                    <img src="static/我们.jpg" alt="描述图片" style="width:100%;max-width:450px">
+                </div>
+            </div>
+            <div class="page" data-page="6">
+                <div class="front">
+                    <h2>你爱自由我却更爱你</h2>
+                    <p>吃的小吃</p>
+                    <img src="static/美食.jpg" style="width:100%;max-width:450px">
+                </div>
+            </div>
+             <div class="page" data-page="7">
+                <div class="front">
+                    <h2>我能习惯远距离</h2>
+                    <p>我拍的合照，某人不喜欢</p>
+                    <img src="static/合照.jpg" alt="描述图片" style="width:100%;max-width:450px">
+                </div>
+            </div>
+            <div class="page" data-page="8">
+                <div class="front">
+                    <h2>爱总是身不由己</h2>
+                    <p>你曾记得小羊和卡比</p>
+                    <img src="static/聊天记录.jpg" alt="描述图片" style="width:100%;max-width:280px">
+                </div>
+            </div>
+            <div class="page" data-page="9">
+                <div class="front">
+                    <h2>宁愿换个方式至少还能</h2>
+                    <p>还记得油炸笨猪猪吗</p>
+                    <img src="static/聊天记录1.jpg" alt="描述图片" style="width:100%;max-width:280px">
+                </div>
+            </div>
+            <div class="page" data-page="10">
+                <div class="front">
+                    <h2>遥远爱着你</h2>
+                    <p>fufu以前看到什么都要和我分享</p>
+                    <img src="static/聊天记录2.jpg" alt="描述图片" style="width:100%;max-width:280px">
+                </div>
+            </div>
+            <div class="page" data-page="11">
+                <div class="front">
+                    <h2>爱能克服远距离</h2>
+                    <p>我想握紧你的手不放</p>
+                    <img src="static/聊天记录4.jpg" alt="描述图片" style="width:100%;max-width:280px">
+                </div>
+            </div>
+            <div class="page" data-page="11">
+                <div class="front">
+                    <h2>多远都要在一起</h2>
+                    <p>时空只是错位了对吗</p>
+                    <img src="static/聊天记录3.jpg" alt="描述图片" style="width:100%;max-width:280px">
+                </div>
+            </div>
+            <div class="page" data-page="9">
+                <div class="front">
+                    <h2>这才是真实存在过的记忆</h2>
+                    <p>我现在记性很差，很多事情我很快就会忘却</p>
+                    <p>我一遍一遍翻看我们的聊天记录</p>
+                    <p>前面的只是很少的一部分</p>
+                    <p>曾经有多幸福，看到就有多痛</p>
+                    <p>尽管每次如冰锥刺入心脏</p>
+                    <p>但我能够确信我们曾经很爱对方</p>
+                    <p>再多痛苦，一切都是值得的</p>
+                </div>
+            </div>
+            <div class="page" data-page="10">
+                <div class="front">
+                    <h2>fufu</h2>
+                    <p>我相信我们的故事还没有结束</p>
+                    <p>我现在知道怎么去爱你了</p>
+                    <p>我们一定能克服一切阻碍</p>
+                    <p>我们和好吧！</p>
+                </div>
+            </div>
+            <div class="back-cover" data-page="back-cover">
+                <div class="front"></div>
+                <div class="back">
+                    <p>THE END</p>
+                    <p></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const book = document.querySelector('.book');
+            const pages = document.querySelectorAll('.page, .cover, .back-cover');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            let currentPage = 0;
+            const totalPages = pages.length;
+            let isAnimating = false;
+
+            // 初始化书本页面位置
+            function initBook() {
+                pages.forEach((page, index) => {
+                    if (index === 0) return; // 封面不动
+
+                    // 设置每页的初始位置和堆叠顺序
+                    page.style.transform = `translateX(${index}px)`;
+                    page.style.zIndex = totalPages - index;
+                });
+
+                // 初始按钮状态
+                updateButtons();
+            }
+
+            // 翻到指定页
+            function goToPage(pageIndex) {
+                if (pageIndex < 0 || pageIndex >= totalPages || isAnimating) return;
+
+                isAnimating = true;
+
+                // 确定翻页方向
+                const direction = pageIndex > currentPage ? 1 : -1;
+
+                // 更新当前页
+                const oldPage = currentPage;
+                currentPage = pageIndex;
+
+                // 更新按钮状态
+                updateButtons();
+
+                // 翻动页面
+                if (direction === 1) {
+                    // 向前翻页
+                    pages[oldPage].classList.add('flipping');
+                    pages[oldPage].style.transform = `rotateY(-180deg) translateX(${oldPage}px)`;
+
+                    // 下一页面应该已经在正确位置
+                    pages[currentPage].style.zIndex = totalPages + 1;
+                } else {
+                    // 向后翻页
+                    pages[oldPage - 1].classList.add('flipping');
+                    pages[oldPage - 1].style.transform = `rotateY(0deg) translateX(${oldPage - 1}px)`;
+
+                    // 当前页面应该回到初始位置
+                    pages[oldPage].style.zIndex = totalPages - oldPage;
+                }
+
+                // 动画结束后清理
+                setTimeout(() => {
+                    if (direction === 1) {
+                        pages[oldPage].classList.remove('flipping');
+                        pages[oldPage].style.zIndex = totalPages - oldPage;
+                    } else {
+                        pages[oldPage - 1].classList.remove('flipping');
+                        pages[oldPage - 1].style.zIndex = totalPages - (oldPage - 1);
+                    }
+
+                    // 更新所有页面的z-index
+                    pages.forEach((page, index) => {
+                        if (index < currentPage) {
+                            page.style.zIndex = totalPages - index;
+                        } else {
+                            page.style.zIndex = totalPages - index;
+                        }
+                    });
+
+                    isAnimating = false;
+                }, 1000);
+            }
+
+            // 更新按钮状态
+            function updateButtons() {
+                prevBtn.style.display = currentPage === 0 ? 'none' : 'flex';
+                nextBtn.style.display = currentPage === totalPages - 1 ? 'none' : 'flex';
+            }
+
+            // 上一页
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (currentPage > 0) {
+                    goToPage(currentPage - 1);
+                }
+            });
+
+            // 下一页
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (currentPage < totalPages - 1) {
+                    goToPage(currentPage + 1);
+                }
+            });
+
+            // 初始化
+            initBook();
+
+            // 添加键盘支持
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                }
+            });
+
+            // 添加触摸支持
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, false);
+
+            document.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, false);
+
+            function handleSwipe() {
+                if (isAnimating) return;
+
+                const threshold = 50; // 最小滑动距离
+                if (touchEndX < touchStartX - threshold) {
+                    // 向左滑动 - 下一页
+                    nextBtn.click();
+                } else if (touchEndX > touchStartX + threshold) {
+                    // 向右滑动 - 上一页
+                    prevBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
